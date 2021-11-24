@@ -1,16 +1,6 @@
+const characterShortNames = ['SOL', 'KYK', 'MAY', 'AXL', 'CHP', 'POT', 'FAU', 'MLL', 'ZAT', 'RAM', 'LEO', 'NAG', 'GIO', 'ANJ', 'INO', 'GLD', 'JKO'];
+
 const stories = [
-    {
-        img: 'https://www.guiltygear.com/ggst/en/wordpress/wp-content/uploads/2020/09/archive_gio.jpg',
-        text: "You've played 1000 games this year!"
-    },
-    {
-        img: 'https://www.dustloop.com/wiki/images/a/af/GGST_Nagoriyuki_Portrait.png',
-        text: 'Your most played character is Nagoriyuki'
-    },
-    {
-        img: 'https://www.guiltygear.com/ggst/en/wordpress/wp-content/uploads/2020/09/archive_gio.jpg',
-        text: 'Your most played character is Giovanna'
-    }
 ]
 
 const storyData = new Vue({
@@ -31,19 +21,59 @@ window.onload = async function () {
     let userDetails = null;
     if (profileURL) {
         userDetails = await getUserDetails(accountID);
-    }
+        const userStats = await getUserStats(userDetails.UserID);
+        console.log(userDetails);
+        console.log(userStats);
+        
+        stories.push({
+            img: 'https://image.api.playstation.com/vulcan/img/rnd/202101/2010/3hxajNDLMtgO2KwJjJpTfYUw.png',
+            text: `Your most played character is ${getPlayerMain(userStats)}`
+        });
 
-    console.log(userDetails);
-    console.log(getUserStats(userDetails.UserID))
-    console.log(storyData, profileURL)
+        goToStory(storyData.activeStoryIndex % stories.length);
+        storyData.activeStoryIndex = 0;
+        stories.push({
+            img: 'https://image.api.playstation.com/vulcan/img/rnd/202101/2010/3hxajNDLMtgO2KwJjJpTfYUw.png',
+            text: `You've played ${getNumGamesPlayed(userStats)} ranked games to date`
+        });
+        stories.push({
+            img: 'https://image.api.playstation.com/vulcan/img/rnd/202101/2010/3hxajNDLMtgO2KwJjJpTfYUw.png',
+            text: `You've spent ${getPlayTime(userStats)} hours of your life playing Guilty Gear Strive`
+        });
+        
+    }
+    
+
     setInterval(function () {
         goToStory(storyData.activeStoryIndex % stories.length);
         storyData.activeStoryIndex += 1;
         storyData.activeStoryIndex %= stories.length
-    }, 2000);
+    }, 5000);
 
 };
 
+function getPlayerMain(userStats) {
+    let highestLevelCharacter = '';
+    let highestCharacterLevel = 0;
+    for (let i = 0; i < characterShortNames.length; i++) {
+        const character = characterShortNames[i];
+        const characterLevel = userStats[character + '_Lv']
+        if (characterLevel > highestCharacterLevel) {
+            highestLevelCharacter = character;
+            highestCharacterLevel = characterLevel;
+        }
+    }
+
+    return highestLevelCharacter;
+}
+
+function getNumGamesPlayed(userStats) {
+    return userStats.TotalRankMatch
+}
+
+function getPlayTime(userStats) {
+    return (userStats.TotalPlayTime/3600/60).toFixed(2)
+}
 function goToStory(n) {
     const img = document.getElementById('story-image');
     const text = document.getElementById('story-text');
@@ -80,20 +110,13 @@ async function getUserStats(userID) {
         mode: 'cors'
     };
 
-    fetch("https://ggst-game.guiltygear.com/api/statistics/get", requestOptions)
-        .then(response => response.text())
-        .then(result => console.log(result))
-        .catch(error => console.log('error', error));
-    // try {
-    //     const userStats = await fetch(`https://ggst-game.guiltygear.com/api/statistics/get`, {
-    //         method: 'POST',
-    //         mode: 'cors',
-    //         headers: new Headers({ 'Content-Type': 'application/x-www-form-urlencoded' }),
-    //         body: {data: '9295b2323130363131313234363234373230333936ad3631393064363236383739373702a5302e302e370396b2323130363131313234363234373230333936070101ffffff'}
-    //     });
-    //     return userStats.json();
-    // } catch (error) {
-    //     console.log('Couldn\'t get stats for user with userID', userID,)
-    //     throw error;
-    // }
+    try {
+        const response = await fetch("https://ggst-api-proxy.herokuapp.com/api/statistics/get", requestOptions)
+        const userStats = JSON.parse((await response.text()).split('?')[1])
+        return userStats
+    } catch (error) {
+        console.log('Couldn\'t get stats for user with userID', userID,)
+        throw error;
+    }
+
 }

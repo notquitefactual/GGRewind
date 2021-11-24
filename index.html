@@ -23,10 +23,10 @@
                     value="http://specs.openid.net/auth/2.0/identifier_select" />
                 <input type="hidden" name="openid.claimed_id"
                     value="http://specs.openid.net/auth/2.0/identifier_select" />
-                <input type="hidden" name="openid.ns" value="http://specs.openid.net/auth/2.0" />
+                <input type="hidden" name="openid.ns" value="https://notquitefactual.github.io/GGRewind/" />
                 <input type="hidden" name="openid.mode" value="checkid_setup" />
                 <input type="hidden" name="openid.realm" value="https://notquitefactual.github.io/GGRewind/" />
-                <input type="hidden" name="openid.return_to" value="https://notquitefactual.github.io/GGRewind/" />
+                <input type="hidden" name="openid.return_to" value="http://localhost:5500" />
                 <Button type="submit">Log in through Steam</Button>
             </form>
             <section v-if="showStory" class="story">
@@ -36,7 +36,7 @@
                             v-bind:class="[index == activeStoryIndex ? 'disabled-progress' : 'enabled-progress']"></div>
                     </div>
                     <img id="story-image"
-                        src="https://www.guiltygear.com/ggst/en/wordpress/wp-content/uploads/2020/09/archive_gio.jpg"
+                        src="https://image.api.playstation.com/vulcan/img/rnd/202101/2010/3hxajNDLMtgO2KwJjJpTfYUw.png"
                         class="story-image" />
 
                     <section id="story-text" class="text-container">
