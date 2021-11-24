@@ -80,7 +80,7 @@ async function getUserStats(userID) {
         mode: 'cors'
     };
 
-    fetch("http://ggst-game.guiltygear.com/api/statistics/get", requestOptions)
+    fetch("https://ggst-game.guiltygear.com/api/statistics/get", requestOptions)
         .then(response => response.text())
         .then(result => console.log(result))
         .catch(error => console.log('error', error));
