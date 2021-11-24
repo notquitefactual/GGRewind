@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+
+    <head>
+        <title>GGRewind</title>
+        <meta charset="utf-8">
+
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="mobile-web-app-capable" content="yes">
+
+        <script src="./index.js" defer></script>
+        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+        <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&amp;display=swap" rel="stylesheet">-
+        <link rel="stylesheet" href="index.css">
+
+    </head>
+
+    <body>
+        <section id="page" class="main-page">
+            <form v-if="!showStory" action="https://steamcommunity.com/openid/login" method="post">
+                <input type="hidden" name="openid.identity"
+                    value="http://specs.openid.net/auth/2.0/identifier_select" />
+                <input type="hidden" name="openid.claimed_id"
+                    value="http://specs.openid.net/auth/2.0/identifier_select" />
+                <input type="hidden" name="openid.ns" value="http://specs.openid.net/auth/2.0" />
+                <input type="hidden" name="openid.mode" value="checkid_setup" />
+                <input type="hidden" name="openid.realm" value="http://127.0.0.1:5500" />
+                <input type="hidden" name="openid.return_to" value="http://127.0.0.1:5500/index.html" />
+                <Button type="submit">Log in through Steam</Button>
+            </form>
+            <section v-if="showStory" class="story">
+                <section class="story-image-container">
+                    <div class="loading-container">
+                        <div v-for="(story, index) in stories"
+                            v-bind:class="[index == activeStoryIndex ? 'disabled-progress' : 'enabled-progress']"></div>
+                    </div>
+                    <img id="story-image"
+                        src="https://www.guiltygear.com/ggst/en/wordpress/wp-content/uploads/2020/09/archive_gio.jpg"
+                        class="story-image" />
+
+                    <section id="story-text" class="text-container">
+                        Placeholder text!
+                    </section>
+                </section>
+            </section>
+
+        </section>
+    </body>
+
+</html>
