@@ -122,7 +122,7 @@ async function getUserStats(userID) {
 
     try {
         const response = await fetch("https://ggst-api-proxy.herokuapp.com/api/statistics/get", requestOptions)
-        const userStats = JSON.parse((await response.text()).split('?')[1])
+        const userStats = JSON.parse((await response.text()).split(/(?=\{)/g)[1])
         return userStats
     } catch (error) {
         console.log('Couldn\'t get stats for user with userID', userID,)
