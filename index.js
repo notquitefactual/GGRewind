@@ -5,7 +5,7 @@ const stories = [
 
 const storyData = new Vue({
     el: "#page",
-    data: { stories, activeStoryIndex: 0, showStory: false }
+    data: { stories, activeStoryIndex: -1, showStory: false }
 })
 window.onload = async function () {
     const urlParams = new URLSearchParams(window.location.search);
@@ -24,14 +24,10 @@ window.onload = async function () {
         const userStats = await getUserStats(userDetails.UserID);
         console.log(userDetails);
         console.log(userStats);
-        
         stories.push({
             img: 'https://image.api.playstation.com/vulcan/img/rnd/202101/2010/3hxajNDLMtgO2KwJjJpTfYUw.png',
             text: `Your most played character is ${getPlayerMain(userStats)}`
         });
-
-        goToStory(storyData.activeStoryIndex % stories.length);
-        storyData.activeStoryIndex = 0;
         stories.push({
             img: 'https://image.api.playstation.com/vulcan/img/rnd/202101/2010/3hxajNDLMtgO2KwJjJpTfYUw.png',
             text: `You've played ${getNumGamesPlayed(userStats)} ranked games to date`
@@ -43,14 +39,27 @@ window.onload = async function () {
         
     }
     
-
+    storyData.activeStoryIndex = 0;
+    goToStory(storyData.activeStoryIndex % stories.length);
     setInterval(function () {
-        goToStory(storyData.activeStoryIndex % stories.length);
         storyData.activeStoryIndex += 1;
         storyData.activeStoryIndex %= stories.length
-    }, 5000);
+        goToStory(storyData.activeStoryIndex % stories.length);
+    }, 3000);
 
 };
+
+function hexEncode(string) {
+    var hex, i;
+
+    var result = "";
+    for (i = 0; i < string.length; i++) {
+        hex = string.charCodeAt(i).toString(16);
+        result += ("000" + hex).slice(-2);
+    }
+
+    return result
+}
 
 function getPlayerMain(userStats) {
     let highestLevelCharacter = '';
@@ -100,8 +109,9 @@ async function getUserStats(userID) {
     myHeaders.append("Content-Type", "application/x-www-form-urlencoded");
 
     var urlencoded = new URLSearchParams();
-    urlencoded.append("data", "9295b2323130363131313234363234373230333936ad3631393064363236383739373702a5302e302e370396b2323130363131313234363234373230333936070101ffffff");
-
+    urlencoded.append("data", "9295b2323131303237313133313233303038333834ad3631393064363236383739373702a5302e302e370396b2"+ hexEncode(userID) + "070101ffffff");
+    // "9295b2323131303237313133313233303038333834ad3631393064363236383739373702a5302e302e370396b2" + userID + "0101ffffff"
+    
     var requestOptions = {
         method: 'POST',
         headers: myHeaders,
