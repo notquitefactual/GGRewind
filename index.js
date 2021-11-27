@@ -9,6 +9,8 @@ const storyData = new Vue({
     data: { stories, activeStoryIndex: -1, showStory: false }
 })
 window.onload = async function () {
+    console.log('Welcome fellow nerd :)')
+    console.log('If you want to know where the stats below are coming from message me on my reddit account: /u/notquitefactual')
     const urlParams = new URLSearchParams(window.location.search);
     const profileURL = urlParams.get('openid.identity');
     let accountID = null
@@ -38,18 +40,15 @@ window.onload = async function () {
 
         stories.push({
             img: 'https://image.api.playstation.com/vulcan/img/rnd/202101/2010/3hxajNDLMtgO2KwJjJpTfYUw.png',
-            text: `Your most played character is ${longPlayerMainName}`
+            text: `You've spent ${getPlayTime(userStats)} hours of your life playing Guilty Gear Strive`
         });
+
         stories.push({
             img: 'https://image.api.playstation.com/vulcan/img/rnd/202101/2010/3hxajNDLMtgO2KwJjJpTfYUw.png',
             text: `You've played ${getNumGamesPlayed(userStats)} ranked games to date`
         });
-        stories.push({
-            img: 'https://image.api.playstation.com/vulcan/img/rnd/202101/2010/3hxajNDLMtgO2KwJjJpTfYUw.png',
-            text: `You've spent ${getPlayTime(userStats)} hours of your life playing Guilty Gear Strive`
-        });
 
-        if (getWinRate(userStatsAdvanced) > 0) {
+        if (getWinRate(userStatsAdvanced) > 0.5) {
             stories.push({
                 img: 'https://image.api.playstation.com/vulcan/img/rnd/202101/2010/3hxajNDLMtgO2KwJjJpTfYUw.png',
                 text: `You've won ${(getWinRate(userStatsAdvanced) * 100).toFixed(2)}% of your ranked games`
@@ -58,7 +57,13 @@ window.onload = async function () {
 
         stories.push({
             img: 'https://image.api.playstation.com/vulcan/img/rnd/202101/2010/3hxajNDLMtgO2KwJjJpTfYUw.png',
-            text: `You've won ${(getWinRate(playerMainStats) * 100).toFixed(2)}% of your ranked games with ${longPlayerMainName}`
+            text: `Your most played character is ${longPlayerMainName}`
+        });
+
+
+        stories.push({
+            img: 'https://image.api.playstation.com/vulcan/img/rnd/202101/2010/3hxajNDLMtgO2KwJjJpTfYUw.png',
+            text: `You've won ${(getWinRateForMain(playerMainStats) * 100).toFixed(2)}% of your ranked games with ${longPlayerMainName}`
         });
 
         stories.push({
@@ -120,6 +125,18 @@ function getWinRate(userStatsAdvanced) {
     return +userStatsAdvanced.Win / +userStatsAdvanced.Match
 }
 
+function getWinRateForMain(userMainStats) {
+    let matches = 0;
+    let wins = 0;
+
+    for (const item in userMainStats) {
+        matches += userMainStats[item].Match;
+        wins += userMainStats[item].Win;
+    }
+
+    return (wins / matches)
+}
+
 function getRomanCancels(userStatsAdvanced) {
     return +userStatsAdvanced.RomanCancel
 }
@@ -140,12 +157,12 @@ function getWorstMatchup(userMainStats) {
     for (let i = 0; i < characterShortNames.length; i++) {
         const data = userMainStats[i];
         indexOfWorst = data.WinPer < worstWinrate ? i : indexOfWorst;
-        worstWinrate = data.WinPer < worstWinrate ? data.WinPer : worstWinrate ;
+        worstWinrate = data.WinPer < worstWinrate ? data.WinPer : worstWinrate;
     }
 
     const character = readable_character_names[indexOfWorst];
-    const winrate = worstWinrate*100
-    return {character, winrate}
+    const winrate = worstWinrate * 100
+    return { character, winrate }
 }
 
 function getBestMatchup(userMainStats) {
@@ -158,8 +175,8 @@ function getBestMatchup(userMainStats) {
     }
 
     const character = readable_character_names[indexOfBest];
-    const winrate = bestWinrate*100 
-    return {character, winrate}
+    const winrate = bestWinrate * 100
+    return { character, winrate }
 }
 function goToStory(n) {
     const img = document.getElementById('story-image');
