@@ -1,4 +1,5 @@
 const characterShortNames = ['SOL', 'KYK', 'MAY', 'AXL', 'CHP', 'POT', 'FAU', 'MLL', 'ZAT', 'RAM', 'LEO', 'NAG', 'GIO', 'ANJ', 'INO', 'GLD', 'JKO'];
+const readable_character_names = ['Sol', 'Ky', 'May', 'Axl', 'Chipp', 'Potemkin', 'Faust', 'Millia', 'Zato', 'Ramlethal', 'Leo', 'Nagoriyuki', 'Giovanna', 'Anji', 'I-No', 'Goldlewis', 'Jack-O']
 
 const stories = [
 ]
@@ -13,7 +14,7 @@ window.onload = async function () {
     let accountID = null
     if (profileURL) {
         accountID = profileURL.split('/').slice(-1)[0]
-        console.log(accountID)
+        console.log('accountID', accountID)
     }
     storyData.showStory = profileURL;
     storyData.showButton = !profileURL ? '' : 'none';
@@ -21,12 +22,23 @@ window.onload = async function () {
     let userDetails = null;
     if (profileURL) {
         userDetails = await getUserDetails(accountID);
-        const userStats = await getUserStats(userDetails.UserID);
-        console.log(userDetails);
-        console.log(userStats);
+        const userStats = await getUserStats(userDetails.UserID, 'onlineRecord');
+        const userStatsAdvanced = await getUserStats(userDetails.UserID, 'onlineRecordAsAllCharsAgainstAllChars');
+        const playerMain = getPlayerMain(userStats);
+        const playerMainCharCode = characterShortNames.indexOf(playerMain);
+        const longPlayerMainName = readable_character_names[playerMainCharCode];
+
+        const playerMainStats = await getUserMainStats(userDetails.UserID, playerMainCharCode);
+        const worstMatchup = getWorstMatchup(playerMainStats);
+        const bestMatchup = getBestMatchup(playerMainStats);
+        console.log('userDetails', userDetails);
+        console.log('userStats', userStats);
+        console.log('onlineRecord', userStatsAdvanced);
+        console.log(`onlineRecord for ${longPlayerMainName}`, playerMainStats);
+
         stories.push({
             img: 'https://image.api.playstation.com/vulcan/img/rnd/202101/2010/3hxajNDLMtgO2KwJjJpTfYUw.png',
-            text: `Your most played character is ${getPlayerMain(userStats)}`
+            text: `Your most played character is ${longPlayerMainName}`
         });
         stories.push({
             img: 'https://image.api.playstation.com/vulcan/img/rnd/202101/2010/3hxajNDLMtgO2KwJjJpTfYUw.png',
@@ -36,9 +48,33 @@ window.onload = async function () {
             img: 'https://image.api.playstation.com/vulcan/img/rnd/202101/2010/3hxajNDLMtgO2KwJjJpTfYUw.png',
             text: `You've spent ${getPlayTime(userStats)} hours of your life playing Guilty Gear Strive`
         });
-        
+
+        if (getWinRate(userStatsAdvanced) > 0) {
+            stories.push({
+                img: 'https://image.api.playstation.com/vulcan/img/rnd/202101/2010/3hxajNDLMtgO2KwJjJpTfYUw.png',
+                text: `You've won ${(getWinRate(userStatsAdvanced) * 100).toFixed(2)}% of your ranked games`
+            });
+        }
+
+        stories.push({
+            img: 'https://image.api.playstation.com/vulcan/img/rnd/202101/2010/3hxajNDLMtgO2KwJjJpTfYUw.png',
+            text: `You've won ${(getWinRate(playerMainStats) * 100).toFixed(2)}% of your ranked games with ${longPlayerMainName}`
+        });
+
+        stories.push({
+            img: 'https://image.api.playstation.com/vulcan/img/rnd/202101/2010/3hxajNDLMtgO2KwJjJpTfYUw.png',
+            text: `Your worst matchup with ${longPlayerMainName} is against ${worstMatchup.character} with a winrate of ${worstMatchup.winrate}%`
+        });
+
+        stories.push({
+            img: 'https://image.api.playstation.com/vulcan/img/rnd/202101/2010/3hxajNDLMtgO2KwJjJpTfYUw.png',
+            text: `Your best matchup with ${longPlayerMainName} is against ${bestMatchup.character} with a winrate of ${bestMatchup.winrate}%`
+        });
+
+
+
     }
-    
+
     storyData.activeStoryIndex = 0;
     goToStory(storyData.activeStoryIndex % stories.length);
     setInterval(function () {
@@ -80,8 +116,50 @@ function getNumGamesPlayed(userStats) {
     return userStats.TotalRankMatch
 }
 
+function getWinRate(userStatsAdvanced) {
+    return +userStatsAdvanced.Win / +userStatsAdvanced.Match
+}
+
+function getRomanCancels(userStatsAdvanced) {
+    return +userStatsAdvanced.RomanCancel
+}
+function getMaxComboHit(userStatsAdvanced) {
+    return +userStatsAdvanced.MaxComboHit
+}
+function getMaxComboDmg(userStatsAdvanced) {
+    return +userStatsAdvanced.MaxComboDmg
+}
+
 function getPlayTime(userStats) {
-    return (userStats.TotalPlayTime/3600/60).toFixed(2)
+    return (userStats.TotalPlayTime / 3600 / 60).toFixed(2)
+}
+
+function getWorstMatchup(userMainStats) {
+    let indexOfWorst = 0;
+    let worstWinrate = 1;
+    for (let i = 0; i < characterShortNames.length; i++) {
+        const data = userMainStats[i];
+        indexOfWorst = data.WinPer < worstWinrate ? i : indexOfWorst;
+        worstWinrate = data.WinPer < worstWinrate ? data.WinPer : worstWinrate ;
+    }
+
+    const character = readable_character_names[indexOfWorst];
+    const winrate = worstWinrate*100
+    return {character, winrate}
+}
+
+function getBestMatchup(userMainStats) {
+    let indexOfBest = 0;
+    let bestWinrate = 0;
+    for (let i = 0; i < characterShortNames.length; i++) {
+        const data = userMainStats[i];
+        indexOfBest = data.WinPer > bestWinrate ? i : indexOfBest;
+        bestWinrate = data.WinPer > bestWinrate ? data.WinPer : bestWinrate;
+    }
+
+    const character = readable_character_names[indexOfBest];
+    const winrate = bestWinrate*100 
+    return {character, winrate}
 }
 function goToStory(n) {
     const img = document.getElementById('story-image');
@@ -104,14 +182,19 @@ async function getUserDetails(accountID) {
     }
 }
 
-async function getUserStats(userID) {
+async function getUserStats(userID, mode) {
     var myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/x-www-form-urlencoded");
 
     var urlencoded = new URLSearchParams();
-    urlencoded.append("data", "9295b2323131303237313133313233303038333834ad3631393064363236383739373702a5302e302e370396b2"+ hexEncode(userID) + "070101ffffff");
-    // "9295b2323131303237313133313233303038333834ad3631393064363236383739373702a5302e302e370396b2" + userID + "0101ffffff"
-    
+
+    if (mode === 'onlineRecord') {
+        urlencoded.append("data", "9295b2323131303237313133313233303038333834ad3631393064363236383739373702a5302e302e370396b2" + hexEncode(userID) + "070101ffffff");
+    }
+    else { // mode === 'onlineRecordAsAllCharsAgainstAllChars'
+        urlencoded.append("data", "9295b2323131303237313133313233303038333834ad3631393064363236383739373702a5302e302e370396b2" + hexEncode(userID) + "0101ffffff");
+    }
+
     var requestOptions = {
         method: 'POST',
         headers: myHeaders,
@@ -130,3 +213,33 @@ async function getUserStats(userID) {
     }
 
 }
+
+async function getUserMainStats(userID, mainCharCode) {
+    var myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/x-www-form-urlencoded");
+
+    var urlencoded = new URLSearchParams();
+    urlencoded.append("data", "9295b2323131303237313133313233303038333834ad3631393064363236383739373702a5302e302e370396b2" + hexEncode(userID) + "01010" + mainCharCode.toString(16) + "feff");
+
+    var requestOptions = {
+        method: 'POST',
+        headers: myHeaders,
+        body: urlencoded,
+        redirect: 'follow',
+        mode: 'cors'
+    };
+
+    try {
+        const response = await fetch("https://ggst-api-proxy.herokuapp.com/api/statistics/get", requestOptions)
+        const responseText = await response.text();
+        const dataStartIndex = responseText.indexOf('{');
+        const jsonData = responseText.slice(dataStartIndex);
+        const userStats = JSON.parse(jsonData)
+        return userStats
+    } catch (error) {
+        console.log('Couldn\'t get stats for user with userID', userID,)
+        throw error;
+    }
+
+}
+
