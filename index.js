@@ -1,5 +1,6 @@
-const characterShortNames = ['SOL', 'KYK', 'MAY', 'AXL', 'CHP', 'POT', 'FAU', 'MLL', 'ZAT', 'RAM', 'LEO', 'NAG', 'GIO', 'ANJ', 'INO', 'GLD', 'JKO'];
-const readable_character_names = ['Sol', 'Ky', 'May', 'Axl', 'Chipp', 'Potemkin', 'Faust', 'Millia', 'Zato', 'Ramlethal', 'Leo', 'Nagoriyuki', 'Giovanna', 'Anji', 'I-No', 'Goldlewis', 'Jack-O']
+const characterShortNames = ['SOL', 'KYK', 'MAY', 'AXL', 'CHP', 'POT', 'FAU', 'MLL', 'ZAT', 'RAM', 'LEO', 'NAG', 'GIO', 'ANJ', 'INO', 'GLD', 'JKO', 'COS'];
+const readable_character_names = ['Sol', 'Ky', 'May', 'Axl', 'Chipp', 'Potemkin', 'Faust', 'Millia', 'Zato', 'Ramlethal', 'Leo', 'Nagoriyuki', 'Giovanna', 'Anji', 'I-No', 'Goldlewis', 'Jack-O', 'Happy Chaos']
+const characterImages = ['sol.png', 'ky.png', 'may.png', 'axl.png', 'chipp.png', 'pot.png', 'faust.png', 'millia.png', 'zato.png', 'ram.png', 'leo.png', 'nago.png', 'gio.png', 'anji.png', 'ino.png', 'goldlewis.png', 'jacko.png', 'chaos.png']
 
 const stories = [
 ]
@@ -56,23 +57,23 @@ window.onload = async function () {
         }
 
         stories.push({
-            img: 'https://image.api.playstation.com/vulcan/img/rnd/202101/2010/3hxajNDLMtgO2KwJjJpTfYUw.png',
+            img: `./assets/character_portraits/${characterImages[playerMainCharCode]}`,
             text: `Your most played character is ${longPlayerMainName}`
         });
 
 
         stories.push({
-            img: 'https://image.api.playstation.com/vulcan/img/rnd/202101/2010/3hxajNDLMtgO2KwJjJpTfYUw.png',
+            img: `./assets/character_portraits/${characterImages[playerMainCharCode]}`,
             text: `You've won ${(getWinRateForMain(playerMainStats) * 100).toFixed(2)}% of your ranked games with ${longPlayerMainName}`
         });
 
         stories.push({
-            img: 'https://image.api.playstation.com/vulcan/img/rnd/202101/2010/3hxajNDLMtgO2KwJjJpTfYUw.png',
+            img: `./assets/character_portraits/${characterImages[readable_character_names.indexOf(worstMatchup.character)]}`,
             text: `Your worst matchup with ${longPlayerMainName} is against ${worstMatchup.character} with a winrate of ${worstMatchup.winrate}%`
         });
 
         stories.push({
-            img: 'https://image.api.playstation.com/vulcan/img/rnd/202101/2010/3hxajNDLMtgO2KwJjJpTfYUw.png',
+            img: `./assets/character_portraits/${characterImages[readable_character_names.indexOf(bestMatchup.character)]}`,
             text: `Your best matchup with ${longPlayerMainName} is against ${bestMatchup.character} with a winrate of ${bestMatchup.winrate}%`
         });
 
@@ -155,9 +156,13 @@ function getWorstMatchup(userMainStats) {
     let indexOfWorst = 0;
     let worstWinrate = 1;
     for (let i = 0; i < characterShortNames.length; i++) {
-        const data = userMainStats[i];
-        indexOfWorst = data.WinPer < worstWinrate ? i : indexOfWorst;
-        worstWinrate = data.WinPer < worstWinrate ? data.WinPer : worstWinrate;
+        try {
+            const data = userMainStats[i];
+            indexOfWorst = data.WinPer < worstWinrate ? i : indexOfWorst;
+            worstWinrate = data.WinPer < worstWinrate ? data.WinPer : worstWinrate;
+        } catch (error) {
+            console.log(`No data found for the matchup against ${characterShortNames[i]}`)
+        }
     }
 
     const character = readable_character_names[indexOfWorst];
@@ -169,9 +174,14 @@ function getBestMatchup(userMainStats) {
     let indexOfBest = 0;
     let bestWinrate = 0;
     for (let i = 0; i < characterShortNames.length; i++) {
-        const data = userMainStats[i];
-        indexOfBest = data.WinPer > bestWinrate ? i : indexOfBest;
-        bestWinrate = data.WinPer > bestWinrate ? data.WinPer : bestWinrate;
+
+        try {
+            const data = userMainStats[i];
+            indexOfBest = data.WinPer > bestWinrate ? i : indexOfBest;
+            bestWinrate = data.WinPer > bestWinrate ? data.WinPer : bestWinrate;
+        } catch (error) {
+            console.log(`No data found for the matchup against ${characterShortNames[i]}`)
+        }
     }
 
     const character = readable_character_names[indexOfBest];
@@ -206,10 +216,10 @@ async function getUserStats(userID, mode) {
     var urlencoded = new URLSearchParams();
 
     if (mode === 'onlineRecord') {
-        urlencoded.append("data", "9295b2323131303237313133313233303038333834ad3631393064363236383739373702a5302e302e370396b2" + hexEncode(userID) + "070101ffffff");
+        urlencoded.append("data", "9295b2323131303237313133313233303038333834ad3631393064363236383739373702a5302e302e380396b2" + hexEncode(userID) + "070101ffffff");
     }
     else { // mode === 'onlineRecordAsAllCharsAgainstAllChars'
-        urlencoded.append("data", "9295b2323131303237313133313233303038333834ad3631393064363236383739373702a5302e302e370396b2" + hexEncode(userID) + "0101ffffff");
+        urlencoded.append("data", "9295b2323131303237313133313233303038333834ad3631393064363236383739373702a5302e302e380396b2" + hexEncode(userID) + "0101ffffff");
     }
 
     var requestOptions = {
@@ -236,7 +246,7 @@ async function getUserMainStats(userID, mainCharCode) {
     myHeaders.append("Content-Type", "application/x-www-form-urlencoded");
 
     var urlencoded = new URLSearchParams();
-    urlencoded.append("data", "9295b2323131303237313133313233303038333834ad3631393064363236383739373702a5302e302e370396b2" + hexEncode(userID) + "01010" + mainCharCode.toString(16) + "feff");
+    urlencoded.append("data", "9295b2323131303237313133313233303038333834ad3631393064363236383739373702a5302e302e380396b2" + hexEncode(userID) + "01010" + mainCharCode.toString(16) + "feff");
 
     var requestOptions = {
         method: 'POST',
